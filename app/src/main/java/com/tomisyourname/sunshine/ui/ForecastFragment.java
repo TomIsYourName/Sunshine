@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +22,7 @@ import android.widget.ListView;
 
 import com.tomisyourname.sunshine.BuildConfig;
 import com.tomisyourname.sunshine.R;
+import com.tomisyourname.sunshine.ui.adapter.ForecastAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,7 +45,7 @@ public class ForecastFragment extends Fragment {
 
   private static final String LOG_TAG = "ForecastFragment";
 
-  private ArrayAdapter<String> adapter;
+  private ForecastAdapter adapter;
 
   public ForecastFragment() {
   }
@@ -61,20 +64,11 @@ public class ForecastFragment extends Fragment {
         "Tuesday-Cloudy-7/3", "Wednesday-Cloudy-10/3", "Thursday-Sunny-12/6"
     };
     ArrayList<String> fakeData = new ArrayList<>(Arrays.asList(fake));
-    adapter = new ArrayAdapter<>(
-        getActivity(),
-        R.layout.list_item_forecast, R.id.tv_list_item_forecast, fakeData);
-    ListView forecastListView = (ListView) rootView.findViewById(R.id.list_forecast);
-    forecastListView.setAdapter(adapter);
-    forecastListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      @Override
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        String forecast = adapter.getItem(position);
-        Intent intent = new Intent(getActivity(), DetailActivity.class);
-        intent.putExtra(Intent.EXTRA_TEXT, forecast);
-        startActivity(intent);
-      }
-    });
+    adapter = new ForecastAdapter(fakeData);
+    RecyclerView forecasts = (RecyclerView) rootView.findViewById(R.id.rv_forecast);
+    forecasts.setHasFixedSize(true);
+    forecasts.setLayoutManager(new LinearLayoutManager(getContext()));
+    forecasts.setAdapter(adapter);
     return rootView;
   }
 
@@ -164,7 +158,7 @@ public class ForecastFragment extends Fragment {
     protected void onPostExecute(String[] data) {
       if(data == null || data.length < 1) return;
       adapter.clear();
-      adapter.addAll(data);
+      adapter.addAll(Arrays.asList(data));
       adapter.notifyDataSetChanged();
     }
   }
@@ -237,4 +231,5 @@ public class ForecastFragment extends Fragment {
 
     return resultStrs;
   }
+
 }
