@@ -46,6 +46,7 @@ public class ForecastFragment extends Fragment {
   private static final String LOG_TAG = "ForecastFragment";
 
   private ForecastAdapter adapter;
+  private RecyclerView forecasts;
 
   public ForecastFragment() {
   }
@@ -59,16 +60,17 @@ public class ForecastFragment extends Fragment {
   @Override
   public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     View rootView = inflater.inflate(R.layout.fragment_forecast, container, false);
-    String[] fake = new String[]{
-        "Today-Sunny-7/-2", "Tomorrow-Sunny-7/-2", "Sunday-Sunny-6/-2", "Monday-Sunny-6/-1",
-        "Tuesday-Cloudy-7/3", "Wednesday-Cloudy-10/3", "Thursday-Sunny-12/6"
-    };
-    ArrayList<String> fakeData = new ArrayList<>(Arrays.asList(fake));
-    adapter = new ForecastAdapter(fakeData);
-    RecyclerView forecasts = (RecyclerView) rootView.findViewById(R.id.rv_forecast);
+    forecasts = (RecyclerView) rootView.findViewById(R.id.rv_forecast);
     forecasts.setHasFixedSize(true);
     forecasts.setLayoutManager(new LinearLayoutManager(getContext()));
-    forecasts.setAdapter(adapter);
+    ArrayList<String> data = loadCachedData();
+    if(data != null) {
+      adapter = new ForecastAdapter(data);
+      forecasts.setAdapter(adapter);
+    } else {
+      String q = "Shanghai,China";
+      new FetchWeatherTask().execute(q);
+    }
     return rootView;
   }
 
@@ -88,6 +90,10 @@ public class ForecastFragment extends Fragment {
     }
 
     return super.onOptionsItemSelected(item);
+  }
+
+  private ArrayList<String> loadCachedData() {
+    return null;
   }
 
   class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
@@ -157,9 +163,14 @@ public class ForecastFragment extends Fragment {
     @Override
     protected void onPostExecute(String[] data) {
       if(data == null || data.length < 1) return;
-      adapter.clear();
-      adapter.addAll(Arrays.asList(data));
-      adapter.notifyDataSetChanged();
+      if(adapter != null) {
+        adapter.clear();
+        adapter.addAll(Arrays.asList(data));
+        adapter.notifyDataSetChanged();
+      } else {
+        adapter = new ForecastAdapter(Arrays.asList(data));
+        forecasts.setAdapter(adapter);
+      }
     }
   }
 
